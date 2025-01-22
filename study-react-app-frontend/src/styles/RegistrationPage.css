@@ -1,0 +1,23 @@
+.register-heading {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: bold;
+}
+#username-register-input, #password-register-input {
+    font-size: 1.5rem;
+}
+#register-btn {
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 10px 15px;
+    bottom: 5%;
+    left: 50%;
+    font-size: 2rem;
+}
+#register-btn:hover {
+    background-color: hsl(0,2%,30%);
+    transition: background-color 1s ease;
+}
+form *{
+    display: inline-block;
+}
