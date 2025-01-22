@@ -18,6 +18,6 @@
     background-color: hsl(0,2%,30%);
     transition: background-color 1s ease;
 }
-form *{
+.login-form *{
     display: inline-block;
 }

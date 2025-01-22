@@ -39,7 +39,7 @@ function TimerPage() {
             <div className='timer-div'>
                 {time} seconds
             </div>
-            <input type="text" value={time} onChange={(e) => setTime(parseInt(e.target.value))} disabled={running} id='timer-input'/>
+            <input type="number" value={time} onChange={(e) => setTime(parseInt(e.target.value))} disabled={running} id='timer-input'/>
             <div className='timer-btn-container'>
                 <button onClick={startTimer} className="timer-btn">Start</button>
                 <button onClick={stopTimer} className="timer-btn">Stop</button>

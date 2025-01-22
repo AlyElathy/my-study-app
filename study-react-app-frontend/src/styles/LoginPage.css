@@ -10,7 +10,7 @@
     font-size: 3rem;
     font-weight: bold;
 }
-form {
+.login-form {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -18,7 +18,7 @@ form {
     align-items: center;
     gap: 10px;
 }
-form *{
+.login-form *{
     display: inline-block;
 }
 #username-login-input, #password-login-input {

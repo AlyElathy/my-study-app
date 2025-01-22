@@ -79,27 +79,41 @@ def login():
 # DATA APIS (protected - @token_required)
 
 
-#Get Flashcards
-@app.route('/flashcards', methods=['GET'])
-@token_required
-def get_flashcards(current_user):
-    user_flashcards = [f for f in saved_data ['flashcards'] if f['user'] == current_user]
-    return jsonify({'flashcards': user_flashcards})
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
 
-# Add Flashcards
-@app.route('/flashcards', methods=['POST'])
-@token_required
-def add_flashcards(current_user):
-    data = request.get_json()
-    question = data.get('question')
-    answer = data.get('answer')
-    saved_data['flashcards'].append( {
-        'user': current_user,
-        'question': question,
-        'answer': answer
-    })
-    return jsonify({'message': 'Flashcard added', 'flashcards': saved_data['flashcards']})
+#in-mem storage
+flashcards = []
+
+@app.route('/api/flashcards', methods=['GET'])
+def get_flashcards():
+    return jsonify(flashcards)
+
+@app.route('/api/flashcards', methods=['POST'])
+def add_flashcard():
+    data = request.json
+    if not data or 'question' not in data or 'answer' not in data:
+        return jsonify({'error': 'Missing question or answer'}), 400
+    new_flashcard = {
+        'id': len(flashcards) + 1,
+        'question': data['question'],
+        'answer': data['answer']
+    }
+    flashcards.append(new_flashcard)
+    return jsonify(new_flashcard), 201
+
+@app.route('/api/flashcards/<int:id>', methods=['DELETE'])
+def delete_flashcard(id):
+    #Delete a flashcard from session by ID
+    global flashcards
+    card = next((card for card in flashcards if card['id'] == id), None)
+    if card is None:
+        return jsonify({'error': 'Card not found'}), 404
+    flashcards = [card for card in flashcards if card['id'] != id]
+    return jsonify({'message': 'card deleted'}), 200
 
 
 @app.route('/')

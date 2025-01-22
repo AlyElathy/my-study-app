@@ -1,72 +1,61 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import FlashcardList from '../card-components/FlashcardList.jsx';
 import '../styles/FlashcardsPage.css'
+import axios from 'axios'
 
 function FlashcardsPage() {
-    const [question, setQuestion] = useState('');
-    const [answer, setAnswer] = useState('');
-    const [flashcards, setFlashcards] = useState([]);
- 
-    useEffect(() => {
-        fetchFlashcards();
-    }, []);
+  const [cards, setCards] = useState([])
+  const [question, setQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
 
-    const fetchFlashcards = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:5000/flashcards', {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setFlashcards(response.data.flashcards.filter(f => f.user === parseJwt(token).username));
-            setQuestion('');
-            setAnswer('');
-        } catch (error) {
-            console.error(error);
-            alert("Trouble fetching flashcards.");
-        }
-    };
+  useEffect(() => {
+    axios.get('http://127.0.0.1:5000/api/flashcards')
+    .then(res => setCards(res.data))
+    .catch(error => console.error(error));
+  }, []);
 
-    const handleAddFlashcard = async () => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.post('http://localhost:5000/flashcards', 
-                {question, answer},
-                {headers: {Authorization: `Bearer ${token}`}}
-            );
-            setFlashcards(response.data.flashcards.filter(f => f.user === parseJwt(token).username));
-            setQuestion('');
-            setAnswer('');
-        } catch (error) {
-            console.error(error);
-            alert("Failed Adding Flashcard");
-        }
-    }
+  function handleAddCard(e) {
+    e.preventDefault()
+    const newCard = { question, answer };
+    axios.post('http://127.0.0.1:5000/api/flashcards', newCard)
+    .then(res => {
+      setCards([...cards, res.data]);
+      setQuestion('');
+      setAnswer('');
+    })
+    .catch(error => console.error(error));
+  }
 
-    const parseJwt = (token) => {
-        if (!token) { return {}; }
-        const base64Url = token.split('.')[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        return JSON.parse(window.atob(base64));
-    }
+  function handleDeleteCard(id) {
+    axios.delete(`http://127.0.0.1:5000/api/flashcards/${id}`)
+    .then(response => {
+      // Update your state after successful deletion
+      setCards(cards.filter(card => card.id !== id));
+    })
+    .catch(error => console.error(error));
+  }
 
-    return (
-        <div id='flashcards-page-div'>
-            <h2 id='flashcards-header'>Flashcards</h2>
-            <div>
-                {flashcards.map((card, index) => (
-                    <div key={index} class='card'>
-                        <p><b>Q:</b>"{card.question}</p>
-                        <p><b>A:</b>"{card.answer}</p>
-                    </div>
-                ))}
-            </div>
-            <div id='create-flashcard-div'>
-                <input placeholder='Question' value={question} onChange={(e) => setQuestion(e.target.value)} className="set-side-input"/>
-                <input placeholder='Answer' value={answer} onChange={(e) => setAnswer(e.target.value)} className="set-side-input"/>
-                <button onClick={handleAddFlashcard} id='add-flashcard-btn'>Add Flashcard</button>
-            </div>
+  return (
+    <>
+      <form className="top-bar" onSubmit={handleAddCard}>
+        <h1 className='flashcards-header'>Flashcards</h1>
+        <div className="form-group">
+          <label htmlFor="question">Question</label>
+          <input type="text" id='question' value={question} onChange={e => setQuestion(e.target.value)} required/>
         </div>
-    );
+        <div className="form-group">
+          <label htmlFor="answer">Answer</label>
+          <input type="text" id='answer' value={answer} onChange={e => setAnswer(e.target.value)} required/>
+        </div>
+        <div className="form-group">
+          <button className="add-btn">Add</button>
+        </div>
+      </form>
+      <div className="container">
+        <FlashcardList cards={cards} onDelete={handleDeleteCard}/>
+      </div>
+    </>
+  );
 }
 
-export default FlashcardsPage
+export default FlashcardsPage;

@@ -24,7 +24,7 @@ function LoginPage() {
     return (
         <div className="loginpage-div">
             <h2 className='login-heading'>Login Page</h2>
-            <form onSubmit={handleLogin} id='login-form'>
+            <form onSubmit={handleLogin} className='login-form'>
                 <input type="text" placeholder='Username' value={username} onChange={(e) => setUsername(e.target.value)} className='form-child' id='username-login-input'/>
                 <input type="password" placeholder='Password' value={password} onChange={(e) => setPassword(e.target.value)} className='form-child' id='password-login-input'/>
                 <button type='submit' className='form-child' id='login-btn'>Log in</button>
