@@ -78,20 +78,14 @@ def login():
 
 # DATA APIS (protected - @token_required)
 
-
-from flask import Flask, request, jsonify, session
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)
-
 #in-mem storage
 flashcards = []
-
+@token_required
 @app.route('/api/flashcards', methods=['GET'])
 def get_flashcards():
     return jsonify(flashcards)
 
+@token_required
 @app.route('/api/flashcards', methods=['POST'])
 def add_flashcard():
     data = request.json
@@ -105,6 +99,7 @@ def add_flashcard():
     flashcards.append(new_flashcard)
     return jsonify(new_flashcard), 201
 
+@token_required
 @app.route('/api/flashcards/<int:id>', methods=['DELETE'])
 def delete_flashcard(id):
     #Delete a flashcard from session by ID

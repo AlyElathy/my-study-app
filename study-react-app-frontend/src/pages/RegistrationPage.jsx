@@ -15,7 +15,7 @@ function RegistrationPage() {
             });
             alert(response.data.message);
         } catch (error) {
-            alert(error.response.data.message || 'Registration failed');
+            alert('Registration failed');
         }
     };
 
