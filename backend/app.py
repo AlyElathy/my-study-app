@@ -1,30 +1,58 @@
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
+from flask_sqlalchemy import SQLAlchemy
 import jwt
 import datetime
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'alkia15+_$' #Change to more secure
-
-CORS(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+ 
+db = SQLAlchemy(app)
+CORS(app, resources={r"/api/*": {"origins":"http://localhost:5173"}}, supports_credentials=True)
 bcrypt = Bcrypt(app)
 
-users = {}
-saved_data = {
-    'flashcards': []
-}
+#After CORS
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    flashcards = db.relationship('Flashcard', backref='author', lazy=True)
+
+class Flashcard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.Text, nullable=False)
+    answer = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+with app.app_context():
+    db.create_all()
 
 def gen_token(username):
     payload = {
         'username': username,
-        'exp': datetime.datetime.now() + datetime.timedelta(hours = 1) #1-hour expiration
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(hours = 1) #1-hour expiration
     }
     token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
     return token
 
 def token_required(f): 
     def wrapper(*args, **kwargs):
+        #Handle OPTIONS requests
+        if request.method == 'OPTIONS':
+            return f(*args, **kwargs)
+
+
         token = None
 
         #JWT is passed in the request headers: Authorization: Bearer<token>
@@ -36,7 +64,9 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user = data['username']
+            current_user = User.query.filter_by(username=data['username']).first()
+            if not current_user:
+                return jsonify({'message': 'User not found'}), 403
         except:
             return jsonify({'message': 'Token is invalid or expired'}), 403
 
@@ -53,11 +83,14 @@ def register():
     username = data['username']
     password = data['password']
 
-    if username in users:
+    current_user = User.query.filter_by(username=username).first()
+    if current_user:
         return jsonify({'message': 'Username already exists'}), 400
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8') #encoding decoding most common system
-    users[username] = hashed_password
+    user = User(username=username, password=hashed_password)
+    db.session.add(user)
+    db.session.commit()
     return jsonify({'message': 'Registration successful'}), 201
 # Login
 @app.route('/login', methods=['POST'])
@@ -66,49 +99,57 @@ def login():
     username = data['username']
     password = data['password']
 
-    if username not in users:
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
         return jsonify({'message': 'User does not exist'}), 404
 
-    hashed_password = users[username]
-    if bcrypt.check_password_hash(hashed_password, password):
+    if bcrypt.check_password_hash(user.password, password):
         token = gen_token(username)
         return jsonify({'token': token}), 200
     else:
         return jsonify({'message': 'Wrong password'}), 200
 
 # DATA APIS (protected - @token_required)
-
-#in-mem storage
-flashcards = []
-@token_required
 @app.route('/api/flashcards', methods=['GET'])
-def get_flashcards():
-    return jsonify(flashcards)
-
 @token_required
+def get_flashcards(current_user):
+    flashcards = Flashcard.query.filter_by(user_id=current_user.id).all()
+    return jsonify([{
+        'id': card.id,
+        'question': card.question,
+        'answer': card.answer,
+    } for card in flashcards])
+
 @app.route('/api/flashcards', methods=['POST'])
-def add_flashcard():
+@token_required
+def add_flashcard(current_user):
     data = request.json
     if not data or 'question' not in data or 'answer' not in data:
         return jsonify({'error': 'Missing question or answer'}), 400
-    new_flashcard = {
-        'id': len(flashcards) + 1,
-        'question': data['question'],
-        'answer': data['answer']
-    }
-    flashcards.append(new_flashcard)
-    return jsonify(new_flashcard), 201
+    new_flashcard = Flashcard(
+        question = data['question'],
+        answer=data['answer'],
+        user_id=current_user.id
+    )
+    db.session.add(new_flashcard)
+    db.session.commit()
+    return jsonify({
+        'id': new_flashcard.id,
+        'question': new_flashcard.question,
+        'answer': new_flashcard.answer
+    }), 201
 
-@token_required
 @app.route('/api/flashcards/<int:id>', methods=['DELETE'])
-def delete_flashcard(id):
+@token_required
+def delete_flashcard(current_user, id):
     #Delete a flashcard from session by ID
-    global flashcards
-    card = next((card for card in flashcards if card['id'] == id), None)
-    if card is None:
+    flashcard = Flashcard.query.filter_by(id=id, user_id=current_user.id).first()
+    if not flashcard:
         return jsonify({'error': 'Card not found'}), 404
-    flashcards = [card for card in flashcards if card['id'] != id]
-    return jsonify({'message': 'card deleted'}), 200
+    db.session.delete(flashcard)
+    db.session.commit()
+    return jsonify({'message': 'Card deleted'}), 200
 
 
 @app.route('/')

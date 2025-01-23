@@ -9,15 +9,23 @@ function FlashcardsPage() {
   const [answer, setAnswer] = useState('');
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:5000/api/flashcards')
+    const token = localStorage.getItem('token');
+    axios.get('http://localhost:5000/api/flashcards', {
+      headers: { 'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+    })
     .then(res => setCards(res.data))
     .catch(error => console.error(error));
   }, []);
 
   function handleAddCard(e) {
     e.preventDefault()
+    const token = localStorage.getItem('token')
     const newCard = { question, answer };
-    axios.post('http://127.0.0.1:5000/api/flashcards', newCard)
+    axios.post('http://localhost:5000/api/flashcards', newCard, {
+      headers: {'Authorization': `Bearer ${token}`}
+    })
     .then(res => {
       setCards([...cards, res.data]);
       setQuestion('');
@@ -27,7 +35,10 @@ function FlashcardsPage() {
   }
 
   function handleDeleteCard(id) {
-    axios.delete(`http://127.0.0.1:5000/api/flashcards/${id}`)
+    const token = localStorage.getItem('token');
+    axios.delete(`http://localhost:5000/api/flashcards/${id}`, {
+      headers: {'Authorization': `Bearer ${token}`}
+    })
     .then(response => {
       // Update your state after successful deletion
       setCards(cards.filter(card => card.id !== id));
