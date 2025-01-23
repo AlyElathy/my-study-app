@@ -31,7 +31,12 @@ function FlashcardsPage() {
       setQuestion('');
       setAnswer('');
     })
-    .catch(error => console.error(error));
+    .catch(error => { // Not logged in or token or expired
+      if (error.response.status === 403) {
+        alert("Session expired (1 hour) or you are not logged in. Please log in and try again to use flashcards.");
+      } else {
+        console.error(error);
+      }});
   }
 
   function handleDeleteCard(id) {
@@ -43,7 +48,12 @@ function FlashcardsPage() {
       // Update your state after successful deletion
       setCards(cards.filter(card => card.id !== id));
     })
-    .catch(error => console.error(error));
+    .catch(error => { // Not logged in or token or expired
+      if (error.response.status === 403) {
+        alert("Session expired (1 hour) or you are not logged in. Please log in and try again to use flashcards.");
+      } else {
+        console.error(error);
+      }});
   }
 
   return (
