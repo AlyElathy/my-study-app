@@ -1,58 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react';
 import FlashcardList from '../card-components/FlashcardList.jsx';
 import '../styles/FlashcardsPage.css'
-import axios from 'axios'
+import axios from 'axios' // HTTP requests
 
 function FlashcardsPage() {
-  const [cards, setCards] = useState([])
-  const [question, setQuestion] = useState('');
-  const [answer, setAnswer] = useState('');
-
+  const [cards, setCards] = useState([]) // initial = empty list
+  // initial = empty string
+  const [question, setQuestion] = useState(''); 
+  const [answer, setAnswer] = useState(''); 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); //Retreive token from localStorage
+    // Send GET request to /api/flashcards
     axios.get('http://localhost:5000/api/flashcards', {
+      // token in the headers
       headers: { 'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     }
     })
-    .then(res => setCards(res.data))
-    .catch(error => console.error(error));
-  }, []);
+    .then(res => setCards(res.data)) // success -> set cards state w/ res.data
+    .catch(error => console.error(error)); //log error
+  }, []); // Runs on Mount
 
   function handleAddCard(e) {
-    e.preventDefault()
-    const token = localStorage.getItem('token')
-    const newCard = { question, answer };
+    e.preventDefault() //Prevent default form submission
+    const token = localStorage.getItem('token') // Retreive token from localStorage
+    const newCard = { question, answer }; // newCard w/ q & a
+    // POST request to create card
     axios.post('http://localhost:5000/api/flashcards', newCard, {
+      // stored token in header
       headers: {'Authorization': `Bearer ${token}`}
     })
+    // Sucess
     .then(res => {
-      setCards([...cards, res.data]);
+      setCards([...cards, res.data]); // spread op for rest of cards, then append returned data
+      // Claer q/a fields
       setQuestion('');
       setAnswer('');
     })
     .catch(error => { // Not logged in or token or expired
-      if (error.response.status === 403) {
+      if (error.response.status === 403) { //If forbidden
         alert("Session expired (1 hour) or you are not logged in. Please log in and try again to use flashcards.");
       } else {
-        console.error(error);
+        console.error(error); // log error
       }});
   }
 
   function handleDeleteCard(id) {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('token'); //get token
+    // delete card by id resource
     axios.delete(`http://localhost:5000/api/flashcards/${id}`, {
       headers: {'Authorization': `Bearer ${token}`}
     })
     .then(response => {
-      // Update your state after successful deletion
-      setCards(cards.filter(card => card.id !== id));
+      // Update state after successful deletion
+      setCards(cards.filter(card => card.id !== id)); // filter out id'd card
     })
     .catch(error => { // Not logged in or token or expired
-      if (error.response.status === 403) {
+      if (error.response.status === 403) { //If forbidden
         alert("Session expired (1 hour) or you are not logged in. Please log in and try again to use flashcards.");
       } else {
-        console.error(error);
+        console.error(error); // log error
       }});
   }
 

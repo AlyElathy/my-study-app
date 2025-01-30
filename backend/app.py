@@ -84,9 +84,9 @@ def token_required(f):
             current_user = User.query.filter_by(username=data['username']).first() #Find matching username db
             #If user DNE 
             if not current_user:
-                return jsonify({'message': 'User not found'}), 404 #Not found status code
+                return jsonify({'message': 'User not found'}), 403 #Forbidden Status Code
         except:
-            return jsonify({'message': 'Token is invalid or expired'}), 403 #Forbidden status code
+            return jsonify({'message': 'Token is invalid or expired'}), 403 #Forbidden Status Code
 
         # Call og func f
         return f(current_user, *args, **kwargs)
@@ -177,7 +177,7 @@ def delete_flashcard(current_user, id):
     flashcard = Flashcard.query.filter_by(id=id, user_id=current_user.id).first() #Find user's flashcard
     #If card DNE
     if not flashcard:
-        return jsonify({'error': 'Card not found'}), 404 # Not Found\
+        return jsonify({'error': 'Card not found'}), 404 # Not Found
     # Delete card from session and commit
     db.session.delete(flashcard) 
     db.session.commit()
