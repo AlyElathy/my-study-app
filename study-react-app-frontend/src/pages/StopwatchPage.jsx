@@ -1,16 +1,17 @@
 import React, {useState, useEffect, useRef} from 'react';
 
 function StopwatchPage() {
-    const [running, setRunning] = useState(false);
-    const intervalIdRef = useRef(null);
-    const [elapsedTime, setElapsedTime] = useState(() => {
-        const savedTime = localStorage.getItem('elapsedTime');
+    const [running, setRunning] = useState(false); // initially not running
+    const intervalIdRef = useRef(null); // intervalId initially DNE
+    // total elapsed
+    const [elapsedTime, setElapsedTime] = useState(() => { 
+        const savedTime = localStorage.getItem('elapsedTime'); // load from localStorage
         return savedTime ? parseInt(savedTime, 10) : 0;
     });
+    // Holds timestamp where sw started (to calc how much time passed)
     const startTimeRef = useRef(Date.now() - elapsedTime);
 
-
-
+    // Resume from same time if user refreshes or closes browser
     useEffect(() => {
         const handleBeforeUnload = () => {
             localStorage.setItem('elapsedTime', elapsedTime);
@@ -19,43 +20,48 @@ function StopwatchPage() {
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
     }, [elapsedTime]);
 
-
-
     useEffect(() => {
-        let interval;
+        // If sw running
         if (running) {
+            // Update elapsed time every 10 ms
             intervalIdRef.current = setInterval(() => {
                 setElapsedTime(Date.now() - startTimeRef.current);
             }, 10);
         } 
+        // Cleanup
         return () => clearInterval(intervalIdRef.current);
-    }, [running]); 
+    }, [running]); //If running false or unmounts
 
-
+    // Start Stopwatch
     function start() {
         setRunning(true);
+        // Subtract from previous
         startTimeRef.current = Date.now() - elapsedTime;
-        console.log(startTimeRef.current);
+        console.log(startTimeRef.current); 
     }
 
+    // Stop Stopwatch
     function stop() {
         setRunning(false);
     }
 
+    // Reset Stopwatch
     function reset() {
-        setElapsedTime(0);
-        setRunning(false)
+        setElapsedTime(0); // Set to 0
+        setRunning(false) // Set running to false
         localStorage.removeItem('elapsedTime'); //Clear Saved Time
     }
 
     //Format time for the display
     function formatTime () {
+        // Calculate times from ms
         let hours = Math.floor(elapsedTime / (1000 * 60 * 60));
         let minutes = Math.floor(elapsedTime / (1000 * 60) % 60);
         let seconds = Math.floor(elapsedTime / 1000 % 60);
         let ms = Math.floor(elapsedTime % 1000 / 10);
 
-        [hours, minutes, seconds, ms] = [hours, minutes, seconds, ms].map(time => String(time).padStart(2, '0'));
+        // Convert all to String to pad
+        [hours, minutes, seconds, ms] = [hours, minutes, seconds, ms].map(time => String(time).padStart(2, '0')); //Pad w/ leading 0 (2 digits)
 
         return `${hours}:${minutes}:${seconds}:${ms}`;
     }

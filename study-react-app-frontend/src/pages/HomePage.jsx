@@ -3,14 +3,17 @@ import {Link} from 'react-router-dom'
 import '../styles/HomePage.css'
 
 function HomePage() {
-    const [showTime, setShowTime] = useState(true);
+    // clock initially show
+    const [showTime, setShowTime] = useState(true); 
+    // Get time immediately
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString())
 
+    // 
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date().toLocaleTimeString());
         }, 1000);
-        return () => clearInterval(timer);
+        return () => clearInterval(timer); //Clear up on unmount 
     }, []); // Render on Mount
 
     return (

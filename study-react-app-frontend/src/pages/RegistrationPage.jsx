@@ -9,13 +9,14 @@ function RegistrationPage() {
     const handleRegistration = async (e) => {
         e.preventDefault();
         try {
+            // Submit (POST) username/pw to /register endpoint
             const response = await axios.post('http://localhost:5000/register', {
                 username, 
                 password
             });
-            alert(response.data.message);
+            alert(response.data.message); // Alert from backend if successful
         } catch (error) {
-            alert('Registration failed');
+            alert('Registration failed'); // Alert if registration failed
         }
     };
 

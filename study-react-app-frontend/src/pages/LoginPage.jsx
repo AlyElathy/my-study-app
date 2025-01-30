@@ -7,17 +7,19 @@ function LoginPage() {
     const [password, setPassword] = useState(``);
 
     const handleLogin = async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission
         try {
+            // POST method w/ username and pw
             const response = await axios.post('http://localhost:5000/login', {
                 username,
                 password
             });
-            const { token } = response.data;
-            localStorage.setItem('token', token);
-            alert('Login successful');
+            // if successful
+            const { token } = response.data; // extract token from response
+            localStorage.setItem('token', token); // Save in localStorage
+            alert('Login successful'); // Alert a successful login
         } catch (error) {
-            console.error("Login Failed");
+            console.error("Login Failed"); // log error
         }
     };
 
