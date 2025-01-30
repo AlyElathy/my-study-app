@@ -13,7 +13,6 @@ function HomePage() {
         return () => clearInterval(timer);
     }, []); // Render on Mount
 
-    // ***************** MAYBE CHANGE HIDE TIME TERNIARY TO TOGGLE BUTTON LIKE IN VIDEO
     return (
         <div className='homepage-div'>
             <h1 className='homepage-heading'>Cozy Study App</h1>
