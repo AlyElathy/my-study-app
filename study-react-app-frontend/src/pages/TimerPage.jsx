@@ -39,13 +39,29 @@ function TimerPage() {
         setTime(0);
     }
 
+    function formatTime (timeInSeconds) {
+        // If no input, display as 0
+        if (isNaN(timeInSeconds)) {
+            timeInSeconds = 0;
+        }
+        // Calculate times from ms
+        let hours = Math.floor(timeInSeconds / 3600);
+        let minutes = Math.floor((timeInSeconds % 3600) / 60);
+        let seconds = Math.floor(timeInSeconds % 60);
+
+        // Convert all to String to pad
+        [hours, minutes, seconds] = [hours, minutes, seconds].map(time => String(time).padStart(2, '0')); //Pad w/ leading 0 (2 digits)
+
+        return `${hours}:${minutes}:${seconds}`;
+    }
+
     return (
         <div className='timer-page-div'>
             <h2 className='timer-header'>Timer</h2>
             <div className='timer-div'>
-                {time} Seconds
+                {formatTime(time)}
             </div>
-            <input type="number" value={time} onChange={(e) => setTime(parseInt(e.target.value))} disabled={running} id='timer-input'/>
+            <input type="number" value={time} onChange={(e) => setTime(parseInt(e.target.value, 10))} disabled={running} id='timer-input' />
             <div className='timer-btn-container'>
                 <button onClick={startTimer} className="timer-btn">Start</button>
                 <button onClick={stopTimer} className="timer-btn">Stop</button>
