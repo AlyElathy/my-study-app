@@ -3,7 +3,7 @@ import {BrowserRouter as Router, Routes, Route, Link} from 'react-router-dom';
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegistrationPage from './pages/RegistrationPage.jsx';
-import StopwatchPage from './pages/StopWatchPage.jsx';
+import StopwatchPage from './pages/StopwatchPage.jsx';
 import TimerPage from './pages/TimerPage.jsx'
 import FlashcardsPage from './pages/FlashcardsPage.jsx'
 import './App.css';
